@@ -14,6 +14,76 @@ with app.app_context():
 
 
 # your routes here
+@app.route("/api/courses/", methods=["GET"])
+def get_all_courses():
+    """
+    Getting all the courses
+    """
+    pass
+
+
+@app.route("/api/courses/", methods=["POST"])
+def create_course():
+    """
+    Creating a course
+    """
+    pass
+
+
+@app.route("/api/courses/", methods=["GET"])
+def get_specific_course():
+    """
+    Getting a course 
+    """
+    pass
+
+
+@app.route("/api/courses/<int:id>/", methods=["GET"])
+def get_specific_course(course_id):
+    """
+    Getting a specific course using course id
+    """
+    pass
+
+
+@app.route("/api/courses/<int:id>/", methods=["DELETE"])
+def delete_course(id):
+    """
+    Deleting a specific course using course id
+    """
+    pass
+
+
+@app.route("/api/users/", methods=["POST"])
+def create_user():
+    """
+    Creating a user
+    """
+    pass
+
+
+@app.route("/api/users/<int:id>/", methods=["GET"])
+def get_specific_user(id):
+    """
+    Getting a specific user
+    """
+    pass
+
+@app.route("/api/courses/<int:id>/add/", methods=["POST"])
+def add_course():
+    """
+    Adding a course to a user
+    """
+    pass
+
+
+@app.route("/api/courses/<int:id>/assignment/", methods=["POST"])
+def create_assignment_to_course():
+    """
+    Creates ans assignment for a course
+    """
+    pass
+
 
 
 if __name__ == "__main__":
