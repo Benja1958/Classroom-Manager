@@ -4,16 +4,40 @@ db = SQLAlchemy()
 
 # your classes here
 
-class Instructor(db.Model):
+#association table for many-to-many between users and courses(students)
+students_table = db.Table(
+    "students",
+    db.Column("user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
+    db.Column("course_id", db.Integer, db.ForeignKey("courses.id"), primary_key=True),
+)
+
+#association table for many-to-many between users and courses(instructors)
+instructors_table = db.Table(
+    "instructors",
+    db.Column("user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
+    db.Column("course_id", db.Integer, db.ForeignKey("courses.id"), primary_key=True),
+)
+
+
+class User(db.Model):
     """
-    Instructor model
-    One-to-many relationship with courses
+    User model for both students and instructors
     """
 
-    __tablename__ = "instructors"
+    __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, nullable=False)
     net_id = db.Column(db.string, nullable=False)
+
+    #courses this instructor teaches
+    instructor_courses = db.relationship(
+        "Course", secondary=instructors_table, back_populates="instructors"
+    )
+
+    #courses this user student is in
+    student_courses = db.relationship(
+        "Course", secondary=instructors_table, back_populates="students"
+    )
 
     def __init__(self, **kwargs):
         """
@@ -27,20 +51,29 @@ class Instructor(db.Model):
         Serializing instructor object to be returned
         """
         return {
+            "id":self.id,
             "name":self.name,
             "net_id": self.net_id
         }
     
-class Courses(db.Model):
+class Course(db.Model):
     """
     Course model
-    Many-to-many realtionship with students 
-    One-to many relationship with instructors
     """
     __tablename__ = "courses"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     code = db.Column(db.String, nullable=False)
     name = db.Column(db.String, nullable=False)
+
+    assignments = db.relationship("Assignment", cascade="delete")
+
+    instructors = db.relationship(
+        "User", secondary=instructors_table, back_populates="instructor_courses"
+    )
+
+    students = db.relationship(
+        "User", secondary=instructors_table, back_populates="student_course"
+    )
 
     def __init__(self, **kwargs):
         """
@@ -55,7 +88,61 @@ class Courses(db.Model):
         Serializing a course object to be returned
         """
         return {
+            "id": self.id,
             "code":self.code,
-            "name":self.name
+            "name":self.name,
+            "assignments": [a.serialize_no_course() for a in self.assignments],
+            "instructors": [i.serialize() for i in self.instructors],
+            "students": [s.serialize() for s in self.students]
         }
+    
+
+class Assignment(db.Model):
+    """
+    Assignment model
+    """
+    __tablename__ = "assignments"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    title = db.Column(db.String, nullable=False)
+    due_date = db.Column(db.Integer, nullabel=False)
+
+
+    course_id = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False)
+    course = db.relationship("Course", backref="assignment_course")
+
+
+    def __init__(self, **kwargs):
+        """
+        Initializes Assignment object
+        """
+        self.title = kwargs.get("title", "")
+        self.due_date = kwargs.get("due_date", "")
+        self.course_id = kwargs.get("course_id")
+
+
+    def serialize(self):
+        """
+        Serializing assignment object to be returned
+        """
+        return {
+            "id":self.id,
+            "title": self.title,
+            "due_date": self.due_date,
+            "course":{
+                "id":self.course.id,
+                "code": self.course.code,
+                "name": self.course.name
+            },
+        }
+    
+    def serialize_no_course(self):
+        """
+        Serializing without a course
+        """
+        return {
+            "id":self.id,
+            "title": self.title,
+            "due_date": self.due_date
+        }
+
 
