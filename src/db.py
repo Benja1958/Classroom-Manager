@@ -27,7 +27,7 @@ class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, nullable=False)
-    net_id = db.Column(db.string, nullable=False)
+    net_id = db.Column(db.String, nullable=False)
 
     #courses this instructor teaches
     instructor_courses = db.relationship(
@@ -36,7 +36,7 @@ class User(db.Model):
 
     #courses this user student is in
     student_courses = db.relationship(
-        "Course", secondary=instructors_table, back_populates="students"
+        "Course", secondary=students_table, back_populates="students"
     )
 
     def __init__(self, **kwargs):
@@ -51,10 +51,18 @@ class User(db.Model):
         Serializing instructor object to be returned
         """
         return {
-            "id":self.id,
-            "name":self.name,
-            "net_id": self.net_id
+            "id": self.id,
+            "name": self.name,
+            "netid": self.net_id
         }
+    
+    def serialize_no_courses(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "netid": self.net_id
+        }
+
     
 class Course(db.Model):
     """
@@ -72,7 +80,7 @@ class Course(db.Model):
     )
 
     students = db.relationship(
-        "User", secondary=instructors_table, back_populates="student_course"
+        "User", secondary=instructors_table, back_populates="student_courses"
     )
 
     def __init__(self, **kwargs):
@@ -89,11 +97,11 @@ class Course(db.Model):
         """
         return {
             "id": self.id,
-            "code":self.code,
-            "name":self.name,
+            "code": self.code,
+            "name": self.name,
             "assignments": [a.serialize_no_course() for a in self.assignments],
-            "instructors": [i.serialize() for i in self.instructors],
-            "students": [s.serialize() for s in self.students]
+            "instructors": [i.serialize_no_courses() for i in self.instructors],
+            "students": [s.serialize_no_courses() for s in self.students]
         }
     
 
@@ -104,7 +112,7 @@ class Assignment(db.Model):
     __tablename__ = "assignments"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String, nullable=False)
-    due_date = db.Column(db.Integer, nullabel=False)
+    due_date = db.Column(db.Integer, nullable=False)
 
 
     course_id = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False)
