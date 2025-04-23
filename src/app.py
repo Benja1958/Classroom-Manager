@@ -31,6 +31,11 @@ def create_course():
     Creates a course
     """
     body = json.loads(request.data)
+    code = body.get("code")
+    name = body.get("name")
+    if code is None or name is None:
+        return failure_response("Missing code or name", 400)
+    
     new_course = Course(code = body.get("code"), name = body.get("name"))
     db.session.add(new_course)
     db.session.commit()
@@ -153,7 +158,7 @@ def create_assignment_to_course(id):
     
     course = Course.query.get(id)
     if course is None:
-        return failure_response("Course not found", 400)
+        return failure_response("Course not found", 404)
     
     new_assignment = Assignment(
         title = title,
@@ -165,7 +170,6 @@ def create_assignment_to_course(id):
     db.session.commit()
 
     return success_response(new_assignment.serialize(), 201)
-
 
 
 if __name__ == "__main__":

@@ -53,7 +53,8 @@ class User(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "netid": self.net_id
+            "netid": self.net_id,
+            "courses": [c.simple_serialize() for c in self.student_courses + self.instructor_courses]
         }
     
     def serialize_no_courses(self):
